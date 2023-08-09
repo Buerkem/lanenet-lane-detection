@@ -66,6 +66,9 @@ class CNNBaseModel(object):
                 w_init = tf.compat.v1.keras.initializers.VarianceScaling(scale=2.0)
             if b_init is None:
                 b_init = tf.compat.v1.constant_initializer()
+            
+            #print("filter shape: ", filter_shape, type(filter_shape))
+            filter_shape = [int(x) for x in filter_shape]
 
             w = tf.compat.v1.get_variable('W', filter_shape, initializer=w_init)
             b = None
@@ -74,11 +77,11 @@ class CNNBaseModel(object):
                 b = tf.compat.v1.get_variable('b', [out_channel], initializer=b_init)
 
             if split == 1:
-                conv = tf.nn.conv2d(inputdata, filters=w, strides=strides, padding=padding, data_format=data_format)
+                conv = tf.nn.conv2d(input=inputdata, filters=w, strides=strides, padding=padding, data_format=data_format)
             else:
                 inputs = tf.split(inputdata, split, channel_axis)
                 kernels = tf.split(w, split, 3)
-                outputs = [tf.nn.conv2d(i, filters=k, strides=strides, padding=padding, data_format=data_format)
+                outputs = [tf.nn.conv2d(input=i, filters=k, strides=strides, padding=padding, data_format=data_format)
                            for i, k in zip(inputs, kernels)]
                 conv = tf.concat(outputs, channel_axis)
 
@@ -233,7 +236,7 @@ class CNNBaseModel(object):
         ndims = len(shape)
         assert ndims in [2, 4]
 
-        mean, var = tf.nn.moments(inputdata, list(range(1, len(shape))), keepdims=True)
+        mean, var = tf.nn.moments(x=inputdata, axes=list(range(1, len(shape))), keepdims=True)
 
         if data_format == 'NCHW':
             channnel = shape[1]
@@ -283,7 +286,7 @@ class CNNBaseModel(object):
         if ch is None:
             raise ValueError("Input of instancebn require known channel!")
 
-        mean, var = tf.nn.moments(inputdata, axis, keepdims=True)
+        mean, var = tf.nn.moments(x=inputdata, axes=axis, keepdims=True)
 
         if not use_affine:
             return tf.divide(inputdata - mean, tf.sqrt(var + epsilon), name='output')
@@ -325,7 +328,7 @@ class CNNBaseModel(object):
         if None not in shape:
             inputdata = tf.reshape(inputdata, [-1, int(np.prod(shape))])
         else:
-            inputdata = tf.reshape(inputdata, tf.stack([tf.shape(inputdata)[0], -1]))
+            inputdata = tf.reshape(inputdata, tf.stack([tf.shape(input=inputdata)[0], -1]))
 
         if w_init is None:
             w_init = tf.compat.v1.keras.initializers.VarianceScaling(scale=2.0)
@@ -362,11 +365,11 @@ class CNNBaseModel(object):
         :return:
         """
         with tf.compat.v1.variable_scope(name):
-            inputdata = tf.transpose(inputdata, [0, 3, 1, 2])
+            inputdata = tf.transpose(a=inputdata, perm=[0, 3, 1, 2])
             n, c, h, w = inputdata.get_shape().as_list()
             group_size = min(group_size, c)
             inputdata = tf.reshape(inputdata, [-1, group_size, c // group_size, h, w])
-            mean, var = tf.nn.moments(inputdata, [2, 3, 4], keepdims=True)
+            mean, var = tf.nn.moments(x=inputdata, axes=[2, 3, 4], keepdims=True)
             inputdata = (inputdata - mean) / tf.sqrt(var + esp)
 
             # 每个通道的gamma和beta
@@ -378,7 +381,7 @@ class CNNBaseModel(object):
             # 根据论文进行转换 [n, c, h, w, c] 到 [n, h, w, c]
             output = tf.reshape(inputdata, [-1, c, h, w])
             output = output * gamma + beta
-            output = tf.transpose(output, [0, 2, 3, 1])
+            output = tf.transpose(a=output, perm=[0, 2, 3, 1])
 
         return output
 
@@ -508,7 +511,7 @@ class CNNBaseModel(object):
 
         with tf.compat.v1.variable_scope(name_or_scope=name):
 
-            output = tf.cond(is_training, f1, f2)
+            output = tf.cond(pred=is_training, true_fn=f1, false_fn=f2)
 
             return output
 
