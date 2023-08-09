@@ -24,9 +24,11 @@ from lanenet_model import lanenet_postprocess
 from local_utils.config_utils import parse_config_utils
 from local_utils.log_util import init_logger
 
+tf.config.optimizer.set_jit(True)
+
 CFG = parse_config_utils.lanenet_cfg
 LOG = init_logger.get_logger(log_file_name_prefix='lanenet_eval')
-
+tf.compat.v1.disable_eager_execution()
 
 def init_args():
     """
@@ -100,9 +102,8 @@ def eval_lanenet(src_dir, weights_path, save_dir):
                 LOG.info('Mean inference time every single image: {:.5f}s'.format(np.mean(avg_time_cost)))
                 avg_time_cost.clear()
 
-            input_image_dir = ops.split(image_path.split('clips')[1])[0][1:]
             input_image_name = ops.split(image_path)[1]
-            output_image_dir = ops.join(save_dir, input_image_dir)
+            output_image_dir = save_dir
             os.makedirs(output_image_dir, exist_ok=True)
             output_image_path = ops.join(output_image_dir, input_image_name)
             if ops.exists(output_image_path):
