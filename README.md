@@ -10,16 +10,15 @@ The main network architecture is as follows:
 ![NetWork_Architecture](./data/source_image/network_architecture.png)
 
 ## Installation
-This software has only been tested on ubuntu 16.04(x64), python3.5, cuda-9.0, cudnn-7.0 with a GTX-1070 GPU. 
-To install this software you need tensorflow 1.12.0 and other version of tensorflow has not been tested but I think 
-it will be able to work properly in tensorflow above version 1.12. Other required package you may install them by
+This software has only been tested on ubuntu 22.04(LTS x64), python3.9, cuda-11.7, cudnn-8.5 with a RTX 3060 TI GPU. 
+To install this software you need tensorflow 2.13.0 . Other required package you may install them by
 
 ```
 pip3 install -r requirements.txt
 ```
 
 ## Test model
-In this repo I uploaded a model trained on tusimple lane dataset [Tusimple_Lane_Detection](http://benchmark.tusimple.ai/#/).
+In this repository I uploaded a model trained on tusimple lane dataset [Tusimple_Lane_Detection](http://benchmark.tusimple.ai/#/).
 The deep neural network inference part can achieve around a 50fps which is similar to the description in the paper. But
 the input pipeline I implemented now need to be improved to achieve a real time lane detection system.
 
@@ -82,10 +81,13 @@ instance use different pixel value to represent different lane field and 0 for t
 All your training image will be scaled into the same scale according to the config file.
 
 Use the script here to generate the tensorflow records file
-
+```
+export PYTHONPATH="${PYTHONPATH}:./lanenet_model/"
+```
 ```
 python tools/make_tusimple_tfrecords.py 
 ```
+
 
 #### Train model
 In my experiment the training epochs are 80010, batch size is 4, initialized learning rate is 0.001 and use polynomial 
