@@ -19,11 +19,12 @@ import tensorflow as tf
 import loguru
 import tqdm
 
+
 from data_provider import lanenet_data_feed_pipline
 from lanenet_model import lanenet
+tf.compat.v1.disable_eager_execution()
 
 LOG = loguru.logger
-
 
 class LaneNetTusimpleTrainer(object):
     """
@@ -34,6 +35,7 @@ class LaneNetTusimpleTrainer(object):
         """
         initialize lanenet trainner
         """
+
         self._cfg = cfg
         # define solver params and dataset
         self._train_dataset = lanenet_data_feed_pipline.LaneNetDataFeeder(flags='train')
@@ -66,7 +68,7 @@ class LaneNetTusimpleTrainer(object):
             self._warmup_init_learning_rate = self._init_learning_rate / 1000.0
         else:
             self._warmup_epoches = 0
-
+        
         # define tensorflow session
         sess_config = tf.compat.v1.ConfigProto(allow_soft_placement=True)
         sess_config.gpu_options.per_process_gpu_memory_fraction = self._cfg.GPU.GPU_MEMORY_FRACTION
@@ -76,9 +78,9 @@ class LaneNetTusimpleTrainer(object):
 
         # define graph input tensor
         with tf.compat.v1.variable_scope(name_or_scope='graph_input_node'):
-            self._input_src_image, self._input_binary_label_image, self._input_instance_label_image = \
+            self._input_src_image, self._input_binary_label_image, self._input_instance_label_image  = \
                 self._train_dataset.next_batch(batch_size=self._batch_size)
-
+            
         # define model loss
         self._model = lanenet.LaneNet(phase='train', cfg=self._cfg)
         loss_set = self._model.compute_loss(
@@ -251,7 +253,7 @@ class LaneNetTusimpleTrainer(object):
         for epoch in range(epoch_start_pt, self._train_epoch_nums):
             train_epoch_losses = []
             train_epoch_mious = []
-            traindataset_pbar = tqdm.tqdm(range(1, self._steps_per_epoch))
+            traindataset_pbar = tqdm.tqdm(range(self._steps_per_epoch))
 
             for _ in traindataset_pbar:
 
@@ -269,6 +271,7 @@ class LaneNetTusimpleTrainer(object):
                     train_step_miou = self._sess.run(
                         fetches=self._miou
                     )
+                    print("Losses written to", train_step_loss)
                     train_epoch_losses.append(train_step_loss)
                     train_epoch_mious.append(train_step_miou)
                     self._summary_writer.add_summary(summary, global_step=global_step_val)
