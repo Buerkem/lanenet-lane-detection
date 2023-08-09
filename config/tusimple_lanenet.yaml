@@ -68,7 +68,7 @@ TRAIN:
         ENABLE: True
         EPOCH: 1
     MULTI_GPU:
-        ENABLE: True
+        ENABLE: False
         GPU_DEVICES: ['0', '1']
         CHIEF_DEVICE_INDEX: 0
 SOLVER:
